@@ -36,7 +36,7 @@ int levelSNode(int key, int maxLevel) {
 		key = key >> 1; //phép dịch bit, sang phải, nếu gặp số lẻ thì dừng, ví dụ 4 là 100, dịch lần 1 được 010, lần 2 được 001 -> dừng 
 		i++; // đếm số lần dịch bit
 	}
-	return (1+i)%maxLevel;
+	return (1+i) % maxLevel;
 }
 void creatsList(sList& L) {
 	L.headNode->key = numeric_limits<int>::min();
@@ -63,7 +63,7 @@ vector<sNode*> searchSNode(sList L, int key) {
 	}
 }
 
-void insertSNode(sList &L, int key) {
+int insertSNode(sList &L, int key) {
 	int lv = levelSNode(key, L.MAX_LEVEL);// xác định level của node
 	sNode* n = createSNode(key, lv); // tạo node với lv tương ứng
 	if (L.headNode->nextNode[0] == NULL) {// ds rỗng, chèn đầu
@@ -74,7 +74,29 @@ void insertSNode(sList &L, int key) {
 	}
 	else {
 		// thêm vào bất kì vị trí:
-		
+		sNode** preNodeInsert=new sNode* [L.MAX_LEVEL-1]; // danh sách các node mà đứng trước node cần thêm theo từng level, dùng để thêm node vào sau đó.
+		int curLevel = L.MAX_LEVEL - 1; // dùng để duyệt từ trên xuống
+		sNode* tempNode = L.headNode;
+		while (tempNode->nextNode[0] != NULL) { // dùng node tạm chạy từ đầu đến cuối, dừng khi chạy hết lv1
+			if (key < tempNode->nextNode[curLevel]->key) { // nếu khóa thêm nhỏ hơn giá trị node sau node tạm.
+				preNodeInsert[curLevel] = tempNode; // thêm node đó vào danh sách node trước.
+				if (curLevel == 0) { // nếu đang ở lv1 thì thêm vào
+					for (; curLevel < lv; curLevel++) {
+						n->nextNode[curLevel] = preNodeInsert[curLevel]->nextNode[curLevel]; // từng lv tương ứng của node cần thêm trỏ vào node tiếp theo.
+						preNodeInsert[curLevel]->nextNode[curLevel] = n;// các node trước trỏ vào node cần thêm
+					}
+					delete preNodeInsert;// xóa bộ nhớ
+					return 0;
+				}
+				curLevel--;
+			}
+			else if (key = tempNode->nextNode[curLevel]->key) {// vị trí bằng
+				return -1; //return chứng tỏ k thêm được
+			}
+			else { // lớn hơn
+				tempNode = tempNode->nextNode[curLevel]; // chạy đến node tiếp theo 
+			}
+		}
 	}
 }
 int main() {
@@ -82,6 +104,12 @@ int main() {
 	L.headNode = new sNode;
 	cout << sizeof(sList);
 	return 0;*/
-
+	vector <int> sodem;
+	//sodem[3] = 0;
+	//sodem[2] = 1;
+	//sodem[1] = 10;
+	sodem.push_back(8);
+	sodem[0] = 10;
+	cout <<  sodem[0] << endl;
 	return 0;
 }
