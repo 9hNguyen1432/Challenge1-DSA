@@ -11,7 +11,7 @@ struct sNode{
 };
 struct sList {
 	int MAX_LEVEL; // cập nhập liên tục mỗi khi thêm, xóa phần tử.
-	vector<int> sizeOfLevel; // kích thước tầng
+	int sizeOfList; // kích thước list
 	sNode* headNode;// Node bắt đầu
 	sNode* NULtail;// Node kết thúc
 };
@@ -42,11 +42,24 @@ void creatsList(sList& L) {
 	L.headNode->key = numeric_limits<int>::min();
 }
 
-void searchSNode(sList L, int key) {
+vector<sNode*> searchSNode(sList L, int key) {
 	vector<sNode*> path;
+	int curLevel = L.MAX_LEVEL - 1;
 	sNode* tempNode = L.headNode;
-	while (L.headNode->nextNode[L.MAX_LEVEL - 1]!= NULL) {
-
+	if (L.headNode->nextNode[curLevel] != NULL) {
+		return path;
+	}
+	while (tempNode->nextNode[0]!= NULL) {
+		if (key < tempNode->nextNode[curLevel]->key) {
+			curLevel--;
+		}
+		else if(key = tempNode->nextNode[curLevel]->key) {
+			return path; //vị trí bằng
+		}
+		else { // lớn hơn
+			path.push_back(tempNode);
+			tempNode = tempNode->nextNode[curLevel];
+		}
 	}
 }
 
