@@ -42,11 +42,30 @@ int levelSNode(int key, int maxLevel) {
 	}
 	return 1 + (i % maxLevel);
 }
+void deleteList(sList& L) {
+	if (L.MAX_LEVEL != 0) {
+		while (L.headNode != L.NULtail) {
+			sNode* temp = L.headNode;
+			L.headNode = L.headNode->nextNode[0];
+			delete temp;
+		}
+		for (int i = 0; i < L.MAX_LEVEL; i++) {
+			L.headNode->nextNode.pop_back();
+			L.NULtail->nextNode.pop_back();
+		}
+		L.MAX_LEVEL = 0;
+		L.sizeOfList = 0;
+	}
+}
 void createSList(sList& L) {
+	deleteList(L);
 	cout << "Nhap so phan tu: ";
 	cin >> L.sizeOfList;
 	int key;
 	L.MAX_LEVEL = 0.2 * L.sizeOfList;
+	if (L.MAX_LEVEL == 0) {
+		L.MAX_LEVEL = 1;
+	}
 	L.headNode->key = numeric_limits<int>::min();
 	L.NULtail->key = numeric_limits<int>::max();
 	for (int i = 0; i < L.MAX_LEVEL; i++) {
@@ -64,23 +83,39 @@ vector<sNode*> searchSNode(sList L, int key) {
 	vector<sNode*> path;
 	int curLevel = L.MAX_LEVEL - 1;
 	sNode* tempNode = L.headNode;
-	if (L.headNode->nextNode[curLevel] != NULL) {
+	if (L.headNode->nextNode[curLevel] ==L.NULtail) {
 		return path;
 	}
-	while (tempNode->nextNode[0] != NULL) {
+	while (tempNode != L.NULtail || curLevel != 0 ) {
 		if (key < tempNode->nextNode[curLevel]->key) {
+			if (curLevel == 0) {
+				return path;
+			}
 			curLevel--;
 		}
-		else if (key = tempNode->nextNode[curLevel]->key) {
-			return path; //vị trí bằng
-		}
-		else { // lớn hơn
-			path.push_back(tempNode);
+		else if (key >= tempNode->nextNode[curLevel]->key) { // lớn hơn
 			tempNode = tempNode->nextNode[curLevel];
+			path.push_back(tempNode);
+			if (key == tempNode->key) {
+				return path;
+			}
 		}
 	}
 }
-
+void displaySearch(sList L) {
+	int key;
+	cout << "Input search value: ";
+	cin >> key;
+	vector<sNode*> path = searchSNode(L, key); 
+	if (path[path.size() - 1]->key == key) {
+		cout << "Level of " << key << " : ";
+		cout << path[path.size() - 1]->nextNode.size() << endl;
+		cout << "Traverse path: ";
+		for (int i = 0; i < path.size()-1; i++) {
+			cout << path[i]->key << " ";
+		}
+	}
+}
 int insertSNode(sList& L, int key, bool creatFlag) {
 	if (L.headNode->nextNode[0] == L.NULtail) {// ds rỗng, chèn đầu
 		int lv = levelSNode(key, L.MAX_LEVEL);// xác định level của node
@@ -101,7 +136,12 @@ int insertSNode(sList& L, int key, bool creatFlag) {
 				if (curLevel == 0) { // nếu đang ở lv1 thì thêm vào
 					if (creatFlag == false) {
 						L.sizeOfList++;
+						int temp = L.MAX_LEVEL;
 						L.MAX_LEVEL = 0.2 * L.sizeOfList;
+						if (L.MAX_LEVEL != temp) {
+							L.headNode->nextNode.push_back(L.NULtail);
+							L.NULtail->nextNode.push_back(NULL);
+						}
 					}
 					int lv = levelSNode(key, L.MAX_LEVEL);// xác định level của node
 					sNode* n = createSNode(key, lv); // tạo node với lv tương ứng
@@ -143,6 +183,8 @@ int deleteSNode(sList& L, int key) {
 						}
 						delete tempNode;
 						delete preNodeInsert;// xóa bộ nhớ
+						L.sizeOfList--;
+						L.MAX_LEVEL = 0.2 * L.sizeOfList;
 						return 0;
 					}
 					else {
@@ -161,6 +203,7 @@ int deleteSNode(sList& L, int key) {
 void disPlay(sList L) {
 	int curLevel = L.MAX_LEVEL - 1;
 	while (curLevel >= 0) {
+		cout << "Level " << curLevel + 1 << " : ";
 		sNode* curNode = L.headNode->nextNode[curLevel];
 		while (curNode != L.NULtail) {
 			cout << curNode->key << " ";
@@ -170,11 +213,31 @@ void disPlay(sList L) {
 		curLevel--;
 	}
 }
+void sizeOfSList(sList L) {
+	if (L.MAX_LEVEL == 0) {
+		cout << "List is empty!!";
+	}
+	else {
+		cout << "Max level: " << L.MAX_LEVEL<< endl;
+		int curLevel = 0;
+		while (curLevel < L.MAX_LEVEL) {
+			cout << "size of level " << curLevel + 1 << " : ";
+			int i = 0;
+			sNode* curNode = L.headNode->nextNode[curLevel];
+			while (curNode != L.NULtail) {
+				i++;
+				curNode = curNode->nextNode[curLevel];
+			}
+			cout << i << endl;
+			curLevel++;
+		}
+	}
+}
 int main() {
 	sList L = initList();
 	createSList(L);
 	disPlay(L);
-	deleteSNode(L, 10);
-	disPlay(L);
+	sizeOfSList(L);
+	displaySearch(L);
 	return 0;
 }
