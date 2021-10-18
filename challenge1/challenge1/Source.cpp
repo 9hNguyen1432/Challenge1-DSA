@@ -5,7 +5,7 @@
 #include <cstdlib>
 using namespace std;
 //khai báo cấu trúc node
-struct sNode{
+struct sNode {
 	int key;
 	vector < sNode* > nextNode;
 };
@@ -15,7 +15,7 @@ struct sList {
 	sNode* headNode;// Node bắt đầu
 	sNode* NULtail;// Node kết thúc
 };
-int insertSNode(sList& L, int key);
+int insertSNode(sList& L, int key, bool createFlag=false);
 sList initList() {
 	sList L;
 	L.MAX_LEVEL = 0;
@@ -40,15 +40,15 @@ int levelSNode(int key, int maxLevel) {
 		key = key >> 1; //phép dịch bit, sang phải, nếu gặp số lẻ thì dừng, ví dụ 4 là 100, dịch lần 1 được 010, lần 2 được 001 -> dừng 
 		i++; // đếm số lần dịch bit
 	}
-	return 1+(i % maxLevel);
+	return 1 + (i % maxLevel);
 }
 void createSList(sList& L) {
 	cout << "Nhap so phan tu: ";
 	cin >> L.sizeOfList;
 	int key;
 	L.MAX_LEVEL = 0.2 * L.sizeOfList;
-	L.headNode->key = numeric_limits<int>::min() ;
-	L.NULtail->key = numeric_limits<int>::max() ;
+	L.headNode->key = numeric_limits<int>::min();
+	L.NULtail->key = numeric_limits<int>::max();
 	for (int i = 0; i < L.MAX_LEVEL; i++) {
 		L.NULtail->nextNode.push_back(NULL);
 		L.headNode->nextNode.push_back(L.NULtail);
@@ -56,7 +56,7 @@ void createSList(sList& L) {
 	for (int i = 0; i < L.sizeOfList; i++) {
 		cout << "nhap phan tu thu" << i << " : ";
 		cin >> key;
-		insertSNode(L, key);
+		insertSNode(L, key, true);
 	}
 }
 
@@ -67,11 +67,11 @@ vector<sNode*> searchSNode(sList L, int key) {
 	if (L.headNode->nextNode[curLevel] != NULL) {
 		return path;
 	}
-	while (tempNode->nextNode[0]!= NULL) {
+	while (tempNode->nextNode[0] != NULL) {
 		if (key < tempNode->nextNode[curLevel]->key) {
 			curLevel--;
 		}
-		else if(key = tempNode->nextNode[curLevel]->key) {
+		else if (key = tempNode->nextNode[curLevel]->key) {
 			return path; //vị trí bằng
 		}
 		else { // lớn hơn
@@ -81,10 +81,10 @@ vector<sNode*> searchSNode(sList L, int key) {
 	}
 }
 
-int insertSNode(sList &L, int key) {
-	int lv = levelSNode(key, L.MAX_LEVEL);// xác định level của node
-	sNode* n = createSNode(key, lv); // tạo node với lv tương ứng
+int insertSNode(sList& L, int key, bool creatFlag) {
 	if (L.headNode->nextNode[0] == L.NULtail) {// ds rỗng, chèn đầu
+		int lv = levelSNode(key, L.MAX_LEVEL);// xác định level của node
+		sNode* n = createSNode(key, lv); // tạo node với lv tương ứng
 		for (int i = 0; i < lv; i++) {
 			n->nextNode[i] = L.headNode->nextNode[i]; // lần lượt các lv của n trỏ vào vị trí head đang trỏ
 			L.headNode->nextNode[i] = n; // trỏ các con trỏ ở từng lv của head về n
@@ -92,15 +92,21 @@ int insertSNode(sList &L, int key) {
 	}
 	else {
 		// thêm vào bất kì vị trí:
-		sNode** preNodeInsert=new sNode* [L.MAX_LEVEL]; // danh sách các node mà đứng trước node cần thêm theo từng level, dùng để thêm node vào sau đó.
+		sNode** preNodeInsert = new sNode * [L.MAX_LEVEL]; // danh sách các node mà đứng trước node cần thêm theo từng level, dùng để thêm node vào sau đó.
 		int curLevel = L.MAX_LEVEL - 1; // dùng để duyệt từ trên xuống
 		sNode* tempNode = L.headNode;
 		while (true) { // dùng node tạm chạy từ đầu đến cuối, dừng khi chạy hết lv1
 			if (key < tempNode->nextNode[curLevel]->key) { // nếu khóa thêm nhỏ hơn giá trị node sau node tạm.
 				preNodeInsert[curLevel] = tempNode; // thêm node đó vào danh sách node trước.
 				if (curLevel == 0) { // nếu đang ở lv1 thì thêm vào
+					if (creatFlag == false) {
+						L.sizeOfList++;
+						L.MAX_LEVEL = 0.2 * L.sizeOfList;
+					}
+					int lv = levelSNode(key, L.MAX_LEVEL);// xác định level của node
+					sNode* n = createSNode(key, lv); // tạo node với lv tương ứng
 					for (; curLevel < lv; curLevel++) {
-						n->nextNode[curLevel]=preNodeInsert[curLevel]->nextNode[curLevel]; // từng lv tương ứng của node cần thêm trỏ vào node tiếp theo.
+						n->nextNode[curLevel] = preNodeInsert[curLevel]->nextNode[curLevel]; // từng lv tương ứng của node cần thêm trỏ vào node tiếp theo.
 						preNodeInsert[curLevel]->nextNode[curLevel] = n;// các node trước trỏ vào node cần thêm
 					}
 					delete preNodeInsert;// xóa bộ nhớ
@@ -117,11 +123,46 @@ int insertSNode(sList &L, int key) {
 		}
 	}
 }
+int deleteSNode(sList& L, int key) {
+	if (L.headNode->nextNode[0] == L.NULtail) {// ds rỗng, báo rỗng
+		return -1;
+	}
+	else {
+		// tìm và xóa vị trí có giá trị key
+		sNode** preNodeInsert = new sNode * [L.MAX_LEVEL]; // danh sách các node mà đứng trước node cần xóa theo từng level
+		int curLevel = L.MAX_LEVEL - 1; // dùng để duyệt từ trên xuống
+		sNode* curNode = L.headNode;
+		while (true) {
+			if (key <= curNode->nextNode[curLevel]->key) { // nếu khóa thêm nhỏ hơn hoặc bằng giá trị node sau node tạm.
+				preNodeInsert[curLevel] = curNode; // thêm node đó vào danh sách node trước.
+				if (curLevel == 0) { // nếu đang ở lv1 
+					if (key == curNode->nextNode[curLevel]->key) { // nếu tim được khóa key
+						sNode* tempNode = curNode->nextNode[curLevel];
+						for (; curLevel < tempNode->nextNode.size(); curLevel++) {
+							preNodeInsert[curLevel]->nextNode[curLevel] = tempNode->nextNode[curLevel];// các node trước trỏ vào node cần thêm
+						}
+						delete tempNode;
+						delete preNodeInsert;// xóa bộ nhớ
+						return 0;
+					}
+					else {
+						delete preNodeInsert;// xóa bộ nhớ
+						return -1;
+					}
+				}
+				curLevel--;
+			}
+			else { // lớn hơn
+				curNode = curNode->nextNode[curLevel]; // chạy đến node tiếp theo 
+			}
+		}
+	}
+}
 void disPlay(sList L) {
-	int curLevel = L.MAX_LEVEL-1;
+	int curLevel = L.MAX_LEVEL - 1;
 	while (curLevel >= 0) {
 		sNode* curNode = L.headNode->nextNode[curLevel];
-		while (curNode->nextNode[curLevel] != L.NULtail) {
+		while (curNode != L.NULtail) {
 			cout << curNode->key << " ";
 			curNode = curNode->nextNode[curLevel];
 		}
@@ -132,6 +173,8 @@ void disPlay(sList L) {
 int main() {
 	sList L = initList();
 	createSList(L);
+	disPlay(L);
+	deleteSNode(L, 10);
 	disPlay(L);
 	return 0;
 }
